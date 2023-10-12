@@ -13,5 +13,7 @@ if (u(t["name"]) == "< multiple values found >") {
 (.connection; .intersections;)->.intersections;
 }
 );
-.streets out;
+// Print intersections using
 .intersections out;
+// Print streets using
+.streets out;
