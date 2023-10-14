@@ -5,6 +5,7 @@ import { MapContainer } from "react-leaflet/MapContainer";
 import { TileLayer } from "react-leaflet/TileLayer";
 import { Marker } from "react-leaflet/Marker";
 import { Popup } from "react-leaflet/Popup";
+import { Polyline } from "react-leaflet/Polyline";
 import "leaflet/dist/leaflet.css";
 import { useMapEvents } from 'react-leaflet/hooks'
 
@@ -61,15 +62,22 @@ export default function App() {
       }
     })
 
-    return markers.map((position, index) => {
-      return (
-        <Marker key={`marker-${index}`} position={position}>
-          <Popup>
-            Popup
-          </Popup>
-        </Marker>
-      );
-    });
+    return (
+      <div>
+        <Polyline positions={markers} />
+        {  
+          markers.map((position, index) => {
+            return (
+              <Marker key={`marker-${index}`} position={position}>
+                <Popup>
+                  Popup
+                </Popup>
+              </Marker>
+            );
+          })
+        }
+      </div>
+    );
   }
 
   const list = () => (
