@@ -3,6 +3,7 @@
   "version": "5.0.0",
   "private": true,
   "scripts": {
+    "app": "concurrently \"npm start\" \"npm run server\"",
     "start": "react-scripts start",
     "server": "node server.js",
     "build": "react-scripts build",
@@ -34,5 +35,8 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:4000"
+  "proxy": "http://localhost:4000",
+  "devDependencies": {
+    "concurrently": "^8.2.1"
+  }
 }

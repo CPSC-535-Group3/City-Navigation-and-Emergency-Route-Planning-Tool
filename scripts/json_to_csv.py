@@ -40,7 +40,7 @@ try:
                         print('node2: ' + str(element['nodes'][i + 1]))
                         node2 = str(element['nodes'][i + 1])
 
-                        edge_csv_writer.writerow([element_id, street_name, node1, node2])
+                        edge_csv_writer.writerow([element_id + node1 + node2, street_name, node1, node2])
             elif element_type == 'node':
                 traffic_signals = 'FALSE'
                 stop = 'FALSE'

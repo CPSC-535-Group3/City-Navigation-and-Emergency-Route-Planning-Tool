@@ -12,12 +12,17 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.get("/api/path", (req, res) => {
-  const startNode = req.query.startNode;
-  const endNode = req.query.endNode;
+  console.log("finding shortest path")
+  let startNode = req.query.startNode;
+  let endNode = req.query.endNode;
   const lat1 = parseFloat(req.query.lat1);
   const lon1 = parseFloat(req.query.lon1);
   const lat2 = parseFloat(req.query.lat2);
   const lon2 = parseFloat(req.query.lon2);
+  console.log("lat1:", lat1)
+  console.log("lon1:", lon1)
+  console.log("lat2:", lat2)
+  console.log("lon2:", lon2)
 
   // Function to find the closest node to a set of coordinates
   function findClosestNode(lat, lon, nodes) {
@@ -62,6 +67,17 @@ app.get("/api/path", (req, res) => {
           });
         })
         .on("end", () => {
+          if (lat1 && lon1) {
+            startNode = findClosestNode(lat1, lon1, nodes)
+          }
+        
+          if (lat2 && lon2) {
+            endNode = findClosestNode(lat2, lon2, nodes)
+          }
+
+          console.log("startNode", startNode)
+          console.log("endNode", endNode)
+
           // Initialize the distance matrix with infinity values
           const numNodes = Object.keys(nodes).length;
           const dist = {};
@@ -85,7 +101,7 @@ app.get("/api/path", (req, res) => {
               });
             }
           }
-
+          console.log("FW starting")
           // Floyd-Warshall algorithm to find shortest paths
           for (const k in nodes) {
             for (const i in nodes) {
@@ -97,7 +113,8 @@ app.get("/api/path", (req, res) => {
               }
             }
           }
-
+          console.log("startNode:", startNode)
+          console.log("endNode:", endNode)
           if (startNode && endNode) {
             // Calculate the shortest path from startNode to endNode
             if (dist[startNode] && dist[startNode][endNode] !== Infinity) {

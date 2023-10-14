@@ -41,13 +41,20 @@ export default function App() {
   const [markers, setMarkers] = useState([]);
   const [pathNodes, setPathNodes] = useState([]);
   const [pathEdges, setPathEdges] = useState([]);
+  const [isPolylineShown, setIsPolylineShown] = useState(false);
 
   const handleChange = (event, newDisplay) => {
     setDisplay(newDisplay);
   };
-  
+
   const findShortestPath = async (event) => {
-    const response = await fetch(`/api/path?` + new URLSearchParams({ startNode: '122862963', endNode: '122763463' }))
+    // const response = await fetch(`/api/path?` + new URLSearchParams({ startNode: 122720994, endNode: 122920632 }))
+    const response = await fetch(`/api/path?` + new URLSearchParams({ 
+      lat1: markers[0].lat, 
+      lon1: markers[0].lng,
+      lat2: markers[1].lat, 
+      lon2: markers[1].lng
+    }))
       .then(response => response.json());
     console.log("response:", response);
     const newMarkers = response.shortestPath.nodes.map(node => ({lat: node.lat, lon: node.lon}));
@@ -55,6 +62,7 @@ export default function App() {
     setMarkers(newMarkers);
     setPathNodes(response.shortestPath.nodes);
     setPathEdges(response.shortestPath.edges);
+    setIsPolylineShown(true);
   }
 
   const LocationMarkers = () => {
@@ -68,7 +76,7 @@ export default function App() {
 
     return (
       <div>
-        <Polyline positions={markers} />
+        {isPolylineShown && <Polyline positions={markers} />}
         {  
           markers.map((position, index) => {
             return (
@@ -109,7 +117,7 @@ export default function App() {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={event => setMarkers([])}>
+          <ListItemButton onClick={event => setMarkers([]) && setIsPolylineShown(false)}>
             <ListItemIcon>
               <RefreshIcon />
             </ListItemIcon>
@@ -125,9 +133,11 @@ export default function App() {
   
     useEffect(() => {
       // Initialize vis.js options and data
-      const nodes = new DataSet(pathNodes.map(node => ({id: node.id, label: `latitude: ${node.lat}, longitude: ${node.lon}`})));
-      const edges = new DataSet(pathEdges.map(edge => ({id: edge.id, to: edge.node2, from: edge.node1, label: edge.weight })));
-  
+      const nodes = new DataSet();
+      pathNodes.forEach(node => nodes.update({id: node.id, label: `latitude: ${node.lat}, longitude: ${node.lon}`}))
+      const edges = new DataSet();
+      pathEdges.forEach(edge => edges.update({id: edge.id, to: edge.node2, from: edge.node1, label: edge.weight }))
+
       const data = { nodes, edges };
       const options = { /* Your options here */ };
   
@@ -177,7 +187,7 @@ export default function App() {
           'map': 
             <MapContainer
               center={[33.8834, -117.885]}
-              zoom={16}
+              zoom={15}
               scrollWheelZoom={false}
               style={{ width: "100vw", height: "100vh" }}
             >
