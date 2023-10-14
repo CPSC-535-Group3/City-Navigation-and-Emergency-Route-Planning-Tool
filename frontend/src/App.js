@@ -6,6 +6,7 @@ import { TileLayer } from "react-leaflet/TileLayer";
 import { Marker } from "react-leaflet/Marker";
 import { Popup } from "react-leaflet/Popup";
 import "leaflet/dist/leaflet.css";
+import { useMapEvents } from 'react-leaflet/hooks'
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -45,10 +46,31 @@ L.Icon.Default.mergeOptions({
 export default function App() {
   const [display, setDisplay] = useState('map');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [markers, setMarkers] = useState([]);
 
   const handleChange = (event, newDisplay) => {
     setDisplay(newDisplay);
   };
+
+  const LocationMarkers = () => {
+    const map = useMapEvents({
+      click(e) {
+        const newMarkers = JSON.parse(JSON.stringify(markers));
+        newMarkers.push(e.latlng);
+        setMarkers(newMarkers);
+      }
+    })
+
+    return markers.map((position, index) => {
+      return (
+        <Marker key={`marker-${index}`} position={position}>
+          <Popup>
+            Popup
+          </Popup>
+        </Marker>
+      );
+    });
+  }
 
   const list = () => (
     <Box
@@ -75,7 +97,7 @@ export default function App() {
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
-          <ListItemButton onClick={(event) => {console.log("Reset")}}>
+          <ListItemButton onClick={event => setMarkers([])}>
             <ListItemIcon>
               <RefreshIcon />
             </ListItemIcon>
@@ -123,24 +145,18 @@ export default function App() {
       {
         {
           'map': 
-            <div style={{ position: "absolute" }}>
-              <MapContainer
-                center={[33.88875, -117.9285]}
-                zoom={13}
-                scrollWheelZoom={false}
-                style={{ width: "100vw", height: "100vh" }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <Marker position={[33.88875, -117.9285]}>
-                  <Popup>
-                    A pretty CSS3 popup. <br /> Easily customizable.
-                  </Popup>
-                </Marker>
-              </MapContainer>
-            </div>,
+            <MapContainer
+              center={[33.88875, -117.9285]}
+              zoom={13}
+              scrollWheelZoom={false}
+              style={{ width: "100vw", height: "100vh" }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <LocationMarkers />
+            </MapContainer>,
           'graph': <Graph />
         }[display]
       }
