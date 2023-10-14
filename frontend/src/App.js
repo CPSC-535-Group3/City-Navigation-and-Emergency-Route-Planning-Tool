@@ -8,32 +8,23 @@ import { Popup } from "react-leaflet/Popup";
 import { Polyline } from "react-leaflet/Polyline";
 import "leaflet/dist/leaflet.css";
 import { useMapEvents } from 'react-leaflet/hooks'
-
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
 import List from '@mui/material/List';
-import Divider from '@mui/material/Divider';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-
-import MailIcon from '@mui/icons-material/Mail';
 import DirectionsIcon from '@mui/icons-material/Directions';
 import RemoveRoadIcon from '@mui/icons-material/RemoveRoad';
 import RefreshIcon from '@mui/icons-material/Refresh';
-
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-
-
 import Drawer from '@mui/material/Drawer';
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,10 +39,23 @@ export default function App() {
   const [display, setDisplay] = useState('map');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [markers, setMarkers] = useState([]);
+  const [pathNodes, setPathNodes] = useState([]);
+  const [pathEdges, setPathEdges] = useState([]);
 
   const handleChange = (event, newDisplay) => {
     setDisplay(newDisplay);
   };
+  
+  const findShortestPath = async (event) => {
+    const response = await fetch(`/api/path?` + new URLSearchParams({ startNode: '122862963', endNode: '122763463' }))
+      .then(response => response.json());
+    console.log("response:", response);
+    const newMarkers = response.shortestPath.nodes.map(node => ({lat: node.lat, lon: node.lon}));
+
+    setMarkers(newMarkers);
+    setPathNodes(response.shortestPath.nodes);
+    setPathEdges(response.shortestPath.edges);
+  }
 
   const LocationMarkers = () => {
     const map = useMapEvents({
@@ -70,7 +74,7 @@ export default function App() {
             return (
               <Marker key={`marker-${index}`} position={position}>
                 <Popup>
-                  Popup
+                  {`latitude: ${position.lat}, longitude: ${position.lng || position.lon}`}
                 </Popup>
               </Marker>
             );
@@ -89,7 +93,7 @@ export default function App() {
     >
       <List>
         <ListItem disablePadding>
-          <ListItemButton onClick={(event) => {console.log("Find Shortest Path")}}>
+          <ListItemButton onClick={findShortestPath}>
             <ListItemIcon>
               <DirectionsIcon />
             </ListItemIcon>
@@ -115,6 +119,24 @@ export default function App() {
       </List>
     </Box>
   );
+
+  const Graph = (intersections, streets) => {
+    const containerRef = useRef(null);
+  
+    useEffect(() => {
+      // Initialize vis.js options and data
+      const nodes = new DataSet(pathNodes.map(node => ({id: node.id, label: `latitude: ${node.lat}, longitude: ${node.lon}`})));
+      const edges = new DataSet(pathEdges.map(edge => ({id: edge.id, to: edge.node2, from: edge.node1, label: edge.weight })));
+  
+      const data = { nodes, edges };
+      const options = { /* Your options here */ };
+  
+      // Create the network
+      const network = new Network(containerRef.current, data, options);
+    }, []);
+  
+    return <div ref={containerRef} style={{ width: '100vw', height: '100vh' }}></div>;
+  }
 
   return (
     <Container disableGutters maxWidth={false}>
@@ -154,8 +176,8 @@ export default function App() {
         {
           'map': 
             <MapContainer
-              center={[33.88875, -117.9285]}
-              zoom={13}
+              center={[33.8834, -117.885]}
+              zoom={16}
               scrollWheelZoom={false}
               style={{ width: "100vw", height: "100vh" }}
             >
@@ -170,30 +192,4 @@ export default function App() {
       }
     </Container>
   );
-}
-
-function Graph(intersections, streets) {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    // Initialize vis.js options and data
-    const nodes = new DataSet([
-      { id: 1, label: 'Intersection 1' },
-      { id: 2, label: 'Intersection 2' },
-      { id: 3, label: 'Intersection 3' },
-    ]);
-
-    const edges = new DataSet([
-      { id: 1, from: 1, to: 2, label: "Main st" },
-      { id: 2, from: 2, to: 3, label: "Broadway" },
-    ]);
-
-    const data = { nodes, edges };
-    const options = { /* Your options here */ };
-
-    // Create the network
-    const network = new Network(containerRef.current, data, options);
-  }, []);
-
-  return <div ref={containerRef} style={{ width: '100vw', height: '100vh' }}></div>;
 }
